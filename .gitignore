@@ -1,0 +1,6 @@
+
+history/*
+
+.ipynb_checkpoints/*
+
+*.pyc
