@@ -16,6 +16,8 @@ def _format_addr(s):
         addr.encode('utf-8') if isinstance(addr, unicode) else addr))
   
 def sendMail(message):  
+    user = "18792865066@163.com"
+    reciever = "sgcy1991@qq.com"
     msg = MIMEText(message, _subtype='html', _charset='utf-8')  
     #msg = MIMEText(message, _subtype='plain', _charset='utf-8')  
     msg['Subject'] = Header(u'今日净值', 'utf-8').encode()
@@ -23,9 +25,9 @@ def sendMail(message):
     msg['To'] = _format_addr(u'StockFuckers<%s>' % reciever)
     print 'Sending mail to: %s' % reciever
     try:
-        server = smtplib.SMTP(host, 25)  
-        server.login("lilidan4000@163.com", "1991311")  
-        server.sendmail(user, ["sgcy1991@qq.com"], msg.as_string())  
+        server = smtplib.SMTP_SSL(host, 465)  
+        server.login(user, "yexinjing~8262")  
+        server.sendmail(user, [reciever], msg.as_string())  
         server.quit()  
         print 'Send success!'
     except Exception, e:
@@ -33,4 +35,5 @@ def sendMail(message):
         print 'Send Fail!'
 
 if __name__ == '__main__':  
-    message = u'<html><body><h3>2016-07-02 日净值</h3><br><h3> 1.155，跌 -0.90%</h3><br><h3>您的账户总资产：21729.25 </h3><br><p>【From StockFucker】 </p></html></body>'
+    message = u'<html><body>a</html></body>'
+    sendMail(message)
