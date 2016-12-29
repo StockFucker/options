@@ -4,9 +4,11 @@ import QuantLib as ql
 import matplotlib.pyplot as plt
 import datetime
 import pandas as pd
+import leveldb
 
 from nowquotes import download
 from wmDownloader import getOptionsInfo,getHistoryQuotesInfo
+from mail import sendMail
 
 risk_free_rate = 0.03 #无风险利率 优化点1  0.005 利率差 对应期权0.1%价格波动，变化不大
 dividend_rate =  0
@@ -37,6 +39,8 @@ class VolTrader:
             call_vol_df = self.get_vol(call_df,ql.Option.Call,fix_spot_price)
             put_vol_df = self.get_vol(put_df,ql.Option.Put,fix_spot_price)
             delta = (call_vol_df["ask"] - put_vol_df["ask"]).abs().dropna()
+            if len(delta) == 0:
+                continue
             delta_se[fix_spot_price] = delta.min()
             vol_se[fix_spot_price] = call_vol_df["ask"][delta.idxmin()]
             call_delta[fix_spot_price] = call_vol_df["ask_delta"][delta.idxmin()]
@@ -123,5 +127,19 @@ class VolTrader:
 
 
 if __name__ == '__main__':
-    voltrader = VolTrader()
-    print voltrader.calculate()
+
+    db = leveldb.LevelDB("db/kv2", create_if_missing=True)
+    last_send_date = None
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    try:
+        last_send_date = db.Get("send_time")
+    except Exception, e:
+        print e
+
+    if today != last_send_date:
+        voltrader = VolTrader()
+        result = voltrader.calculate()
+        if result[2] <= 0.12:
+            message = u'<html><body>' + str(result) + u'</html></body>'
+            sendMail(message)
+            db.Put("send_time",today)

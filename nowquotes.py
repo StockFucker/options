@@ -6,8 +6,7 @@ import urllib2
 import sys   
 import datetime
 from sina_parser import Parser
-from wmDownloader import getOptionsInfo
-from utils import getAllMonth
+from wmDownloader import getOptionsInfo,getAllMonth
 
 class download:
     def __init__(self):
