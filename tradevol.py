@@ -61,7 +61,9 @@ class VolTrader:
         strike_price = df["strike_price"][idx]
         call_code = list(call_df[call_df["strike_price"] == strike_price].index)[0]
         put_code = list(put_df[put_df["strike_price"] == strike_price].index)[0]
-        return call_code,put_code,vol,call_delta,put_delta
+        call_price = list(call_df[call_df["strike_price"] == strike_price]["sell_price"])[0]
+        put_price = list(put_df[put_df["strike_price"] == strike_price]["sell_price"])[0]
+        return call_code,put_code,vol,call_delta,put_delta,call_price,put_price
 
     def get_vol(self,df,option_type,spot_price):
         vol_df = pd.DataFrame(index=list(df["strike_price"]),columns=['bid','ask','bid_delta','ask_delta'])
@@ -126,20 +128,30 @@ class VolTrader:
         return vol,european_option2.delta()
 
 
-if __name__ == '__main__':
 
+def go():
     db = leveldb.LevelDB("db/kv2", create_if_missing=True)
     last_send_date = None
-    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    now = datetime.datetime.now()
+    if now.hour == 9 and now.hour < 30:
+        return
+    today = now.strftime("%Y-%m-%d")
+
     try:
         last_send_date = db.Get("send_time")
     except Exception, e:
         print e
 
-    if today != last_send_date:
-        voltrader = VolTrader()
-        result = voltrader.calculate()
-        if result[2] <= 0.12:
-            message = u'<html><body>' + str(result) + u'</html></body>'
-            sendMail(message)
-            db.Put("send_time",today)
+    if today == last_send_date:
+        return
+        
+    voltrader = VolTrader()
+    result = voltrader.calculate()
+    print result
+    if result[2] <= 0.12:
+        message = u'<html><body>' + str(result) + u'</html></body>'
+        sendMail(message)
+        db.Put("send_time",today)
+
+if __name__ == '__main__':
+    go()
